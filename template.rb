@@ -131,8 +131,21 @@ gsub_file 'app/assets/javascripts/application.js', "//= require turbolinks\n", '
 ################################################################################
 puts 'Adding email layout'
 copy_file './app/views/layouts/mailer.html.haml'
-# Add ApplicationMailer
-# Add delayed job
+puts 'Adding ApplicationMailer'
+create_file 'app/mailers/application_mailer.rb', <<-TEXT
+class ApplicationMailer < ActionMailer::Base
+  default from: 'info@#{@app_name}.com'
+  layout 'mailer'
+
+  class SubjectPrefixer
+    def self.delivering_email(mail)
+      mail.subject.prepend '[#{@app_name.titleize}] '
+    end
+  end
+  register_interceptor SubjectPrefixer
+end
+TEXT
+puts 'Adding email config to development.rb'
 environment "config.action_mailer.default_url_options = { host: 'localhost', port: 3000 }", env: :development
 environment "config.action_mailer.delivery_method = :letter_opener", env: :development
 
@@ -141,7 +154,7 @@ environment "config.action_mailer.delivery_method = :letter_opener", env: :devel
 ################################################################################
 # Add HomeController
 # Add view
-route "root to: 'home#index'" # Clear routes and set root to home controller todo copy over file instead
+copy_file './config/routes.rb', force: true
 
 ################################################################################
 # ApplicationController
@@ -161,6 +174,14 @@ generate "devise:views" and rake "haml:replace_erbs"
 # Ask to create model (default is User)
 #   If yes, create basic crud pages, stylesheets etc. This might need to go after
 #   templates section
+
+################################################################################
+# DelayedJob
+################################################################################
+puts 'Adding delayed job'
+generate 'delayed_job:active_record'
+rake 'db:migrate'
+create_file 'config/initializers/delayed_job.rb', 'Rails.application.config.active_job.queue_adapter = :delayed_job'
 
 ################################################################################
 # Simple form
