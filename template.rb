@@ -84,9 +84,7 @@ rails_helper = File.read('spec/rails_helper.rb').gsub(
 file 'spec/rails_helper.rb', rails_helper, force: true
 
 puts 'Copying over spec/support files'
-Dir["#{source_paths.first}/spec/support/**/*.rb"].each.map { |file|
-  ".#{file.gsub("#{source_paths.first}", '')}"
-}.each &method(:copy_file)
+directory 'spec/support'
 
 ################################################################################
 # Layout
@@ -113,9 +111,7 @@ TEXT
 ################################################################################
 puts 'Adding default sass files (layout, variables, forms, etc)'
 remove_file 'app/assets/stylesheets/application.css'
-Dir["#{source_paths.first}/app/assets/stylesheets/**/*.sass"].each.map { |file|
-  ".#{file.gsub("#{source_paths.first}", '')}"
-}.each &method(:copy_file)
+directory 'app/assets/stylesheets'
 
 ################################################################################
 # Javascript
@@ -130,7 +126,7 @@ gsub_file 'app/assets/javascripts/application.js', "//= require turbolinks\n", '
 # Email
 ################################################################################
 puts 'Adding email layout'
-copy_file './app/views/layouts/mailer.html.haml'
+copy_file 'app/views/layouts/mailer.html.haml'
 puts 'Adding ApplicationMailer'
 create_file 'app/mailers/application_mailer.rb', <<-TEXT
 class ApplicationMailer < ActionMailer::Base
@@ -154,7 +150,7 @@ environment "config.action_mailer.delivery_method = :letter_opener", env: :devel
 ################################################################################
 # Add HomeController
 # Add view
-copy_file './config/routes.rb', force: true
+copy_file 'config/routes.rb', force: true
 
 ################################################################################
 # ApplicationController
