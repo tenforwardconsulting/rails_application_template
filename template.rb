@@ -120,7 +120,11 @@ Dir["#{source_paths.first}/app/assets/stylesheets/**/*.sass"].each.map { |file|
 ################################################################################
 # Javascript
 ################################################################################
+puts 'Setting up application.js'
 # Add window.ProjectName = {} to application.js
+append_to_file 'app/assets/javascripts/application.js', "\nwindow.#{@app_name.camelize} = {};"
+# Remove turbolinks
+gsub_file 'app/assets/javascripts/application.js', "//= require turbolinks\n", ''
 
 ################################################################################
 # Email
