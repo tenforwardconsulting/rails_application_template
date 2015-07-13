@@ -9,79 +9,31 @@ end
 ################################################################################
 # Heroku
 ################################################################################
-if yes?("Deploying to Heroku?")
-  gem 'rails_12factor', group: :production
-end
+#if yes?("Deploying to Heroku?")
+  #gem 'rails_12factor', group: :production
+#end
 
 ################################################################################
 # API
 ################################################################################
-if yes?("Create API files?")
+#if yes?("Create API files?")
   # Put api_constraints in lib
   # ApiController with render_success, render_error, etc methods
   # Puts token on model
   # spec/requests. Probably some basic tests for error handling, authenticating?
   # spec/support/request_helpers
-end
+#end
 
 ################################################################################
-# Gems
+# Gemfile
 ################################################################################
-# TODO We should copy over a gemfile instead since the default one is full of crap
-gem 'awesome_print'
-gem 'coffee-rails', '~> 4.1.0'
-gem 'compass-rails'
-gem 'devise'
-gem 'figaro'
-gem 'haml-rails'
-gem 'jbuilder', '~> 2.0'
-gem 'jefferies_tube', git: 'https://github.com/tenforwardconsulting/jefferies_tube'
-gem 'jquery-rails'
-gem 'pg'
-gem 'premailer-rails'
-gem 'rails', '4.2.3'
-gem 'sass-rails', '~> 5.0'
-gem 'sdoc', '~> 0.4.0', group: :doc
-gem 'simple_form'
-gem 'uglifier', '>= 1.3.0'
-gem 'will_paginate'
-
-gem_group :development, :test do
-  gem 'byebug'
-  gem 'factory_girl_rails'
-  gem 'faker'
-  gem 'pry-rails'
-  gem 'rspec-rails'
-  gem 'web-console', '~> 2.0'
-end
-
-gem_group :development do
-  gem 'better_errors'
-  gem 'binding_of_caller'
-  gem 'capistrano-passenger'
-  gem 'capistrano-rails'
-  gem 'erb2haml'
-  gem 'letter_opener'
-  gem 'quiet_assets'
-  gem 'spring'
-  gem 'spring-commands-rspec'
-end
-
-gem_group :test do
-  gem 'capybara'
-  gem 'capybara-screenshot'
-  gem 'database_cleaner'
-  gem 'poltergeist'
-  gem 'timecop'
-  gem 'vcr'
-  gem 'webmock', require: false
-end
+copy_file 'Gemfile', force: true
 
 ################################################################################
 # RVM
 ################################################################################
 require 'rvm'
-latest_ruby_version = ask "What's the latest ruby version?" # RVM::Environment.new.list_known.select { |str| str.include? "[ruby-]" }.last.gsub("[ruby-]", '').gsub(/\[|\]/, '')
+latest_ruby_version = '2.2.2' # ask "What's the latest ruby version?" # RVM::Environment.new.list_known.select { |str| str.include? "[ruby-]" }.last.gsub("[ruby-]", '').gsub(/\[|\]/, '')
 file '.ruby-version', latest_ruby_version
 file '.ruby-gemset', @app_name
 
@@ -108,6 +60,7 @@ rake "db:create"
 ################################################################################
 generate 'rspec:install'
 
+puts 'Setting up spec_helper.rb'
 spec_helper = File.read('spec/spec_helper.rb').
   # Uncomment rspec defaults
   gsub("# The settings below are suggested to provide a good initial experience\n", '').
@@ -115,29 +68,54 @@ spec_helper = File.read('spec/spec_helper.rb').
   gsub("=begin\n", '').
   gsub("=end\n", '').
   # Comment out profile examples config
-  gsub("  config.profile_examples = 10\n", "  #config.profile_examples = 10\n")
+  gsub("config.profile_examples = 10", "#config.profile_examples = 10")
 file 'spec/spec_helper.rb', spec_helper, force: true
 
+puts 'Setting up rails_helper...'
 rails_helper = File.read('spec/rails_helper.rb').gsub(
-  "#\n# Dir[Rails.root.join('spec/support/**/*.rb')].each { |f| require f }\n",
-  "Dir[Rails.root.join('spec/support/**/*.rb')].each { |f| require f }\n"
+  # Require all files in spec/support
+  "#\n# Dir[Rails.root.join('spec/support/**/*.rb')].each { |f| require f }",
+  "Dir[Rails.root.join('spec/support/**/*.rb')].each { |f| require f }"
+).gsub(
+  # We use database cleaner to manage the test database
+  "config.use_transactional_fixtures = true",
+  "# This is set to false in spec/support/database_cleaner.rb\n#config.use_transactional_fixtures = true",
 )
 file 'spec/rails_helper.rb', rails_helper, force: true
 
-# TODO Copy over spec/support files
+puts 'Copying over spec/support files'
+Dir["#{source_paths.first}/spec/support/**/*.rb"].each.map { |file|
+  ".#{file.gsub("#{source_paths.first}", '')}"
+}.each &method(:copy_file)
 
 ################################################################################
 # Layout
 ################################################################################
 rake "haml:replace_erbs"
-# Customize layouts/application.html.haml
-#   Add .content
-#   Add notice, alerts
+puts "Setting up application.html.haml"
+# Add meta viewport tag so responsive works
+gsub_file 'app/views/layouts/application.html.haml', '%head', "%head\n    %meta{content: \"width=device-width, initial-scale=1\", name: \"viewport\"}"
+# Remove turbolinks
+gsub_file 'app/views/layouts/application.html.haml', "    = stylesheet_link_tag    'application', media: 'all', 'data-turbolinks-track' => true\n", ''
+gsub_file 'app/views/layouts/application.html.haml', "    = javascript_include_tag 'application', 'data-turbolinks-track' => true\n", ''
+# Add notice, alert, and wrap yield in main
+gsub_file 'app/views/layouts/application.html.haml', '    = yield', <<-TEXT
+    - if notice
+      .notice= notice
+    - if alert
+      .alert= alert
+
+    %main= yield
+TEXT
 
 ################################################################################
 # Stylesheets
 ################################################################################
-# Add stock sass files (layout, variables, forms, etc)
+puts 'Adding default sass files (layout, variables, forms, etc)'
+remove_file 'app/assets/stylesheets/application.css'
+Dir["#{source_paths.first}/app/assets/stylesheets/**/*.sass"].each.map { |file|
+  ".#{file.gsub("#{source_paths.first}", '')}"
+}.each &method(:copy_file)
 
 ################################################################################
 # Javascript
@@ -147,9 +125,10 @@ rake "haml:replace_erbs"
 ################################################################################
 # Email
 ################################################################################
+puts 'Adding email layout'
+copy_file './app/views/layouts/mailer.html.haml'
 # Add ApplicationMailer
 # Add delayed job
-# Add email.sass, emails/_layout.sass
 environment "config.action_mailer.default_url_options = { host: 'localhost', port: 3000 }", env: :development
 environment "config.action_mailer.delivery_method = :letter_opener", env: :development
 
@@ -158,7 +137,12 @@ environment "config.action_mailer.delivery_method = :letter_opener", env: :devel
 ################################################################################
 # Add HomeController
 # Add view
-route "root to: 'home#index'" # Clear routes and set root to home controller
+route "root to: 'home#index'" # Clear routes and set root to home controller todo copy over file instead
+
+################################################################################
+# ApplicationController
+################################################################################
+# Add admin_required filter and render_not_authorized
 
 ################################################################################
 # Devise
@@ -169,17 +153,20 @@ generate "devise:views" and rake "haml:replace_erbs"
 # Change password length min to 6
 # Add devise classes to top of files (.devise-page, .devise-sessions-new, .devise-passwords-edit, etc)
 # Add devise stylesheet app/assets/stylesheets/_devise.sass
+# Change devise :users path to 'auth' in config/routes.rb
+# Ask to create model (default is User)
+#   If yes, create basic crud pages, stylesheets etc. This might need to go after
+#   templates section
 
 ################################################################################
 # Simple form
 ################################################################################
-# I think there's a generator for this
+# I think there's a generator for this that makes a template that might need some editing
 
 ################################################################################
 # VCR
 ################################################################################
 # Add vcr cassettes directory to gitignore
-
 
 ################################################################################
 # Templates and Generators

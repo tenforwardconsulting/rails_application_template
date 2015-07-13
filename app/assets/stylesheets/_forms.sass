@@ -1,0 +1,35 @@
+.input // Wrapper div from simple_form
+  // General form styles
+  input, select
+    border-radius: 6px
+    height: 40px
+    font-size: 14px
+
+  input, select
+    border: 1px solid $black
+
+  select
+    background-color: white
+
+  // String inputs
+  select, input.string, input.numeric, input.password
+    padding: 4px 8px
+    width: 100%
+
+.button, a.button:visited
+  -webkit-appearance: none
+  background-color: $medium-blue
+  border-radius: 16px
+  border: 0
+  color: white
+  cursor: pointer
+  font-size: 16px
+  font-weight: 500
+  padding: 12px 12px
+  text-transform: uppercase
+
+  &:hover
+    color: $black
+    text-decoration: none
+  &:active
+    color: $black

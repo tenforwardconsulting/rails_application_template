@@ -1,0 +1,11 @@
+// Don't show the 'required' asterisk by default
+label.required
+  abbr[title="required"]
+    display: none
+
+.error
+  color: $red
+  font-style: italic
+  text-transform: lowercase
+  &::before
+    content: ' '
