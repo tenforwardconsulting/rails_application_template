@@ -148,8 +148,8 @@ environment "config.action_mailer.delivery_method = :letter_opener", env: :devel
 ################################################################################
 # HomeController
 ################################################################################
-# Add HomeController
-# Add view
+copy_file 'app/controllers/home_controller.rb'
+copy_file 'app/views/home/index.html.haml'
 copy_file 'config/routes.rb', force: true
 
 ################################################################################
