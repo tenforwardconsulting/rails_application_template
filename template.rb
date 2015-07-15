@@ -1,3 +1,7 @@
+require 'pry'
+require_relative 'template_helpers/template_helpers'
+extend TemplateHelpers
+
 ################################################################################
 # By overwriting the source_paths method to contain the location of your template,
 # methods like copy_file will accept relative paths to your template's location.
@@ -54,6 +58,13 @@ run "bundle config build.nokogiri --use-system-libraries"
 run "bundle install"
 run "spring binstub --all"
 rake "db:create"
+run "RAILS_ENV=test bin/rake db:create"
+
+################################################################################
+# Templates and Generators
+################################################################################
+directory 'lib/templates'
+# TODO Copy and customize rails templates
 
 ################################################################################
 # RSpec
@@ -127,6 +138,7 @@ gsub_file 'app/assets/javascripts/application.js', "//= require turbolinks\n", '
 ################################################################################
 puts 'Adding email layout'
 copy_file 'app/views/layouts/mailer.html.haml'
+
 puts 'Adding ApplicationMailer'
 create_file 'app/mailers/application_mailer.rb', <<-TEXT
 class ApplicationMailer < ActionMailer::Base
@@ -165,10 +177,12 @@ gsub_file 'config/environments/production.rb', "\nend", <<-TEXT
   }
 end
 TEXT
+# TODO Style emails?
 
 ################################################################################
 # HomeController
 ################################################################################
+# TODO Add a good controller template and use it to make home controller?
 copy_file 'app/controllers/home_controller.rb'
 copy_file 'app/views/home/index.html.haml'
 copy_file 'config/routes.rb', force: true
@@ -177,21 +191,54 @@ copy_file 'config/routes.rb', force: true
 # Devise
 ################################################################################
 generate "devise:install"
-generate "devise:views" and rake "haml:replace_erbs"
-# Create DeviseMailer with layout 'mailer'
-# Change password length min to 6
-# Add devise classes to top of files (.devise-page, .devise-sessions-new, .devise-passwords-edit, etc)
-# Add devise stylesheet app/assets/stylesheets/_devise.sass
-# Change devise :users path to 'auth' in config/routes.rb
-# Ask to create model (default is User)
-#   If yes, create basic crud pages, stylesheets etc. This might need to go after
-#   templates section
+generate "devise:views"
+rake "haml:replace_erbs"
 
-################################################################################
-# ApplicationController
-################################################################################
-copy_file 'app/controllers/application_controller.rb', force: true
-copy_file 'spec/controllers/application_controller_spec.rb'
+puts 'Creating devise mailer'
+copy_file 'app/mailers/devise_mailer.rb'
+
+puts 'Configuring devise'
+gsub_file 'config/initializers/devise.rb', "# config.mailer = 'Devise::Mailer'", "config.mailer = 'DeviseMailer'"
+gsub_file 'config/initializers/devise.rb', "config.password_length = 8..72", "config.password_length = 6..128"
+gsub_file 'config/initializers/devise.rb', "config.sign_out_via = :delete", "config.sign_out_via = [:delete, :get]"
+
+puts 'Formatting devise views'
+# This css depends on the stylesheets having been copied over.
+# Their copying should probably be done here instead so it is self contained
+Dir['app/views/devise/*'].each do |devise_directory|
+  next if ['shared'].include?(devise_directory) # Excluded directories
+
+  Dir["#{devise_directory}/*.haml"].each do |haml_file|
+    action = File.basename(haml_file).gsub('.html.haml', '').gsub('_', '-')
+    resource = devise_directory.gsub 'app/views/devise/', ''
+    css_class = ".devise-page.#{resource}-#{action}"
+    indent_file haml_file, by: 2
+    prepend_to_file haml_file, "#{css_class}\n"
+  end
+end
+
+if true # yes? 'Generate devise model?'
+  model_name = 'User' # ask('Model name? [default: User]')
+  #model_name = model_name.strip.empty? ? 'User' : model_name
+  generate "devise #{model_name}"
+
+  puts 'Configuring devise routes'
+  snake_case_model_name = model_name.gsub(/([a-z\d])([A-Z])/, '\1_\2').downcase
+  gsub_file 'config/routes.rb', "devise_for :#{snake_case_model_name}s", "devise_for :#{snake_case_model_name}s, path: 'auth'"
+
+  puts 'Setting up user factory'
+  copy_file 'spec/factories/users.rb', force: true
+
+  # Add admin to user
+  #   # Create migration
+  #   copy_file 'app/controllers/application_controller.rb', force: true # Contains require_admin and render_not_authorized
+  #   copy_file 'spec/controllers/application_controller_spec.rb'
+
+  if false # yes? 'Create #{model_name} scaffold?'
+    # create basic crud pages and stylesheet? This should use controller scaffold
+    # Controller should be admin only (and a way to test that: controller tests? integration tests?)
+  end
+end
 
 ################################################################################
 # DelayedJob
@@ -217,12 +264,6 @@ end
 # Add vcr cassettes directory to gitignore
 
 ################################################################################
-# Templates and Generators
-################################################################################
-# Configure generators (esp. controller and scaffold_controller)
-# Add templates for remaining generators
-
-################################################################################
 # Capistrano
 ################################################################################
 # Make deploys/production.rb
@@ -233,6 +274,16 @@ end
 # DelayedJob, Capistrano
 ################################################################################
 # Copy over delayed_job stuff for capistrano
+
+################################################################################
+# TODO
+################################################################################
+# Look through gemfile and see if there are any i missed
+
+################################################################################
+# Migrate
+################################################################################
+run 'RAILS_ENV=test bin/rake db:migrate'
 
 ################################################################################
 # Git
