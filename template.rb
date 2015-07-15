@@ -141,9 +141,30 @@ class ApplicationMailer < ActionMailer::Base
   register_interceptor SubjectPrefixer
 end
 TEXT
+
 puts 'Adding email config to development.rb'
-environment "config.action_mailer.default_url_options = { host: 'localhost', port: 3000 }", env: :development
-environment "config.action_mailer.delivery_method = :letter_opener", env: :development
+gsub_file 'config/environments/development.rb', "\nend", <<-TEXT
+
+  #Action mailer settings
+  config.action_mailer.default_url_options = { host: 'localhost', port: 3000 }
+  config.action_mailer.delivery_method = :letter_opener
+end
+TEXT
+
+puts 'Adding email config to production.rb'
+gsub_file 'config/environments/production.rb', "\nend", <<-TEXT
+<<-TEXT
+
+  #Action mailer settings
+  config.action_mailer.delivery_method = :sendmail
+  config.action_mailer.perform_deliveries = true
+  #config.action_mailer.asset_host = 'https://example.com'
+  #config.action_mailer.default_url_options = { host: 'https://example.com' }
+  config.action_mailer.smtp_settings = {
+    :enable_starttls_auto => false
+  }
+end
+TEXT
 
 ################################################################################
 # HomeController
@@ -177,7 +198,12 @@ generate "devise:views" and rake "haml:replace_erbs"
 puts 'Adding delayed job'
 generate 'delayed_job:active_record'
 rake 'db:migrate'
-create_file 'config/initializers/delayed_job.rb', 'Rails.application.config.active_job.queue_adapter = :delayed_job'
+create_file 'config/initializers/delayed_job.rb' do
+<<-TEXT
+Rails.application.config.active_job.queue_adapter = :delayed_job
+Delayed::Worker.logger = Logger.new(File.join(Rails.root, 'log', "\#{Rails.env}_delayed_job.log"))
+TEXT
+end
 
 ################################################################################
 # Simple form
@@ -201,6 +227,11 @@ create_file 'config/initializers/delayed_job.rb', 'Rails.application.config.acti
 # Make deploys/production.rb
 # Make sure deploy.rb has the defaults we linke (linked_files/dirs, branch setting, ...)
 # Add set :passenger_restart_with_touch, true to deploy.rb
+
+################################################################################
+# DelayedJob, Capistrano
+################################################################################
+# Copy over delayed_job stuff for capistrano
 
 ################################################################################
 # Git
