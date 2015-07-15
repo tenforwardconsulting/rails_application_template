@@ -174,11 +174,6 @@ copy_file 'app/views/home/index.html.haml'
 copy_file 'config/routes.rb', force: true
 
 ################################################################################
-# ApplicationController
-################################################################################
-# Add admin_required filter and render_not_authorized
-
-################################################################################
 # Devise
 ################################################################################
 generate "devise:install"
@@ -191,6 +186,12 @@ generate "devise:views" and rake "haml:replace_erbs"
 # Ask to create model (default is User)
 #   If yes, create basic crud pages, stylesheets etc. This might need to go after
 #   templates section
+
+################################################################################
+# ApplicationController
+################################################################################
+copy_file 'app/controllers/application_controller.rb', force: true
+copy_file 'spec/controllers/application_controller_spec.rb'
 
 ################################################################################
 # DelayedJob
