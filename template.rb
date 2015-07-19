@@ -63,8 +63,24 @@ run "RAILS_ENV=test bin/rake db:create"
 ################################################################################
 # Templates and Generators
 ################################################################################
+puts 'Configuring generators'
+insert_into_file 'config/application.rb', after: "config.active_record.raise_in_transactional_callbacks = true\n" do
+<<-TEXT
+
+    # Custom generator settings
+    config.generators do |g|
+      g.javascripts false
+      g.helper false
+      g.jbuilder false
+      g.test_framework :rspec, view_specs: false, routing_specs: false, request_specs: false, controller_specs: false
+    end
+TEXT
+end
+puts 'Copying over generator templates'
 directory 'lib/templates'
-# TODO Copy and customize rails templates
+# Figure out scaffold_controller
+# Figure out scaffold
+# Some sort of feature test generator? CRUD feature spec generator?
 
 ################################################################################
 # RSpec
