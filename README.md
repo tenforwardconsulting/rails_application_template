@@ -11,6 +11,7 @@ The files in lib/templates/rails are modified from their [source in the rails re
 * Extract sections into their own self contained generator (and add to jefferies tube)
 * Use gsub\_file instead of copy\_file when able? (so changes can be made to the same file from multiple places)
 * Add responsive tables javascript
+* Add admin flag to user
 
 ## Testing
 First time
