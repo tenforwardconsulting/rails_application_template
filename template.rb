@@ -121,8 +121,7 @@ puts "Setting up application.html.haml"
 # Add meta viewport tag so responsive works
 gsub_file 'app/views/layouts/application.html.haml', '%head', "%head\n    %meta{content: \"width=device-width, initial-scale=1\", name: \"viewport\"}"
 # Remove turbolinks
-gsub_file 'app/views/layouts/application.html.haml', "    = stylesheet_link_tag    'application', media: 'all', 'data-turbolinks-track' => true\n", ''
-gsub_file 'app/views/layouts/application.html.haml', "    = javascript_include_tag 'application', 'data-turbolinks-track' => true\n", ''
+gsub_file 'app/views/layouts/application.html.haml', ", 'data-turbolinks-track' => true\n", ''
 # Add notice, alert, and wrap yield in main
 gsub_file 'app/views/layouts/application.html.haml', '    = yield', <<-TEXT
     - if notice
