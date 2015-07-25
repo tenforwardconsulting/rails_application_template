@@ -283,19 +283,47 @@ end
 ################################################################################
 # Capistrano
 ################################################################################
-# Make deploys/production.rb
-# Make sure deploy.rb has the defaults we linke (linked_files/dirs, branch setting, ...)
-# Add set :passenger_restart_with_touch, true to deploy.rb
+run 'cap install'
+append_to_file 'Capfile', "\nrequire 'jefferies_tube/capistrano'"
+gsub_file 'Capfile', "# require 'capistrano/rails/assets'\n# require 'capistrano/rails/migrations'", "require 'capistrano/rails'"
+gsub_file 'Capfile', "# require 'capistrano/passenger'", "require 'capistrano/passenger'"
+gsub_file 'config/deploy.rb',
+  "# ask :branch, `git rev-parse --abbrev-ref HEAD`.chomp",
+  "set :branch, ENV['BRANCH'] || 'master'"
+gsub_file 'config/deploy.rb',
+  "# set :linked_files, fetch(:linked_files, []).push('config/database.yml', 'config/secrets.yml')",
+  "set :linked_files, fetch(:linked_files, []).push('config/database.yml', 'config/application.yml')"
+gsub_file 'config/deploy.rb',
+  "# set :linked_dirs, fetch(:linked_dirs, []).push('log', 'tmp/pids', 'tmp/cache', 'tmp/sockets', 'vendor/bundle', 'public/system')",
+  "set :linked_dirs, fetch(:linked_dirs, []).push('log', 'tmp/pids', 'tmp/cache', 'tmp/sockets', 'vendor/bundle', 'public/system')"
 
-################################################################################
-# DelayedJob, Capistrano
-################################################################################
-# Copy over delayed_job stuff for capistrano
+text = <<-TEXT
+namespace :deploy do
 
-################################################################################
-# TODO
-################################################################################
-# Look through gemfile and see if there are any i missed
+  after :restart, :clear_cache do
+    on roles(:web), in: :groups, limit: 3, wait: 10 do
+      # Here we can do anything such as:
+      # within release_path do
+      #   execute :rake, 'cache:clear'
+      # end
+    end
+  end
+
+end
+TEXT
+text2 = <<-TEXT
+namespace :deploy do
+  after :restart, :clear_cache do
+    on roles(:web), in: :groups, limit: 3, wait: 10 do
+      invoke 'delayed_job:restart'
+    end
+  end
+
+  after 'deploy:publishing', 'deploy:restart'
+end
+TEXT
+gsub_file 'config/deploy.rb', text, text2
+directory 'lib/capistrano'
 
 ################################################################################
 # Migrate
