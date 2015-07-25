@@ -143,6 +143,8 @@ directory 'app/assets/stylesheets'
 # Javascript
 ################################################################################
 puts 'Setting up application.js'
+# require_self before require_tree
+insert_into_file 'app/assets/javascripts/application.js', "//= require_self\n", before: "//= require_tree ."
 # Add window.ProjectName = {} to application.js
 append_to_file 'app/assets/javascripts/application.js', "\nwindow.#{@app_name.camelize} = {};"
 # Remove turbolinks
