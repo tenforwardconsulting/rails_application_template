@@ -121,7 +121,7 @@ puts "Setting up application.html.haml"
 # Add meta viewport tag so responsive works
 gsub_file 'app/views/layouts/application.html.haml', '%head', "%head\n    %meta{content: \"width=device-width, initial-scale=1\", name: \"viewport\"}"
 # Remove turbolinks
-gsub_file 'app/views/layouts/application.html.haml', ", 'data-turbolinks-track' => true\n", ''
+gsub_file 'app/views/layouts/application.html.haml', ", 'data-turbolinks-track' => true", ''
 # Add notice, alert, and wrap yield in main
 gsub_file 'app/views/layouts/application.html.haml', '    = yield', <<-TEXT
     - if notice
@@ -227,7 +227,7 @@ Dir['app/views/devise/*'].each do |devise_directory|
     action = File.basename(haml_file).gsub('.html.haml', '').gsub('_', '-')
     resource = devise_directory.gsub 'app/views/devise/', ''
     css_class = ".devise-page.#{resource}-#{action}"
-    indent_file haml_file, by: 2
+    indent_file haml_file, by: 1
     prepend_to_file haml_file, "#{css_class}\n"
   end
 end
