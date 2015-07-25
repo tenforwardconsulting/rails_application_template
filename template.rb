@@ -305,6 +305,9 @@ run 'RAILS_ENV=test bin/rake db:migrate'
 ################################################################################
 # Git
 ################################################################################
+run 'cp config/database.yml config/database.yml.example'
+copy_file 'config/application.yml.example'
+append_to_file '.gitignore', "\nconfig/application.yml\nconfig/database.yml"
 after_bundle do
   git :init
   git add: '.'
