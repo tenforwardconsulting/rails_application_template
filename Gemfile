@@ -2,7 +2,7 @@ source 'https://rubygems.org'
 
 gem 'awesome_print'
 gem 'coffee-rails', '~> 4.1.0'
-gem 'compass-rails'
+gem 'compass-rails', '~> 2.0.4'
 gem 'daemons'
 gem 'delayed_job_active_record'
 gem 'devise'
