@@ -182,7 +182,6 @@ TEXT
 
 puts 'Adding email config to production.rb'
 gsub_file 'config/environments/production.rb', "\nend", <<-TEXT
-<<-TEXT
 
   #Action mailer settings
   config.action_mailer.delivery_method = :sendmail
