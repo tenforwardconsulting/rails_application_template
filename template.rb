@@ -64,6 +64,7 @@ run "RAILS_ENV=test bin/rake db:create"
 # Templates and Generators
 ################################################################################
 puts 'Configuring generators'
+generate 'simple_form:install'
 insert_into_file 'config/application.rb', after: "config.active_record.raise_in_transactional_callbacks = true\n" do
 <<-TEXT
 
@@ -77,7 +78,7 @@ insert_into_file 'config/application.rb', after: "config.active_record.raise_in_
 TEXT
 end
 puts 'Copying over generator templates'
-directory 'lib/templates'
+directory 'lib/templates', force: true
 # Figure out scaffold_controller
 # Figure out scaffold
 # Some sort of feature test generator? CRUD feature spec generator?
@@ -117,20 +118,7 @@ directory 'spec/support'
 # Layout
 ################################################################################
 rake "haml:replace_erbs"
-puts "Setting up application.html.haml"
-# Add meta viewport tag so responsive works
-gsub_file 'app/views/layouts/application.html.haml', '%head', "%head\n    %meta{content: \"width=device-width, initial-scale=1\", name: \"viewport\"}"
-# Remove turbolinks
-gsub_file 'app/views/layouts/application.html.haml', ", 'data-turbolinks-track' => true", ''
-# Add notice, alert, and wrap yield in main
-gsub_file 'app/views/layouts/application.html.haml', '    = yield', <<-TEXT
-    - if notice
-      .notice= notice
-    - if alert
-      .alert= alert
-
-    %main= yield
-TEXT
+directory 'app/views/layouts', force: true
 
 ################################################################################
 # Stylesheets
@@ -221,8 +209,9 @@ gsub_file 'config/initializers/devise.rb', "config.sign_out_via = :delete", "con
 puts 'Formatting devise views'
 # This css depends on the stylesheets having been copied over.
 # Their copying should probably be done here instead so it is self contained
+excluded_directories = ['app/views/devise/shared']
 Dir['app/views/devise/*'].each do |devise_directory|
-  next if ['shared'].include?(devise_directory) # Excluded directories
+  next if excluded_directories.include?(devise_directory)
 
   Dir["#{devise_directory}/*.haml"].each do |haml_file|
     action = File.basename(haml_file).gsub('.html.haml', '').gsub('_', '-')
@@ -268,11 +257,6 @@ Rails.application.config.active_job.queue_adapter = :delayed_job
 Delayed::Worker.logger = Logger.new(File.join(Rails.root, 'log', "\#{Rails.env}_delayed_job.log"))
 TEXT
 end
-
-################################################################################
-# Simple form
-################################################################################
-# I think there's a generator for this that makes a template that might need some editing
 
 ################################################################################
 # VCR

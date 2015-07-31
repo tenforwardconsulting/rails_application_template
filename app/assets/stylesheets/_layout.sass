@@ -1,10 +1,20 @@
-main
-  margin: 0 auto
-  max-width: 1080px
+nav
+  +clearfix
+  background-color: white
+
+  ul
+    list-style-type: none
+
+  li
+    display: inline
+    line-height: 40px
+    margin-left: 40px
+    &:last-child
+      margin-right: 40px
 
 .notice, .alert
   color: white
-  padding: 20px
+  padding: 6px
   text-align: center
 
 .notice
@@ -12,3 +22,8 @@ main
 
 .alert
   background-color: $red
+
+main
+  margin: 0 auto
+  max-width: 1080px
+  padding: 0 20px

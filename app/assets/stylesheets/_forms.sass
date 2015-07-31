@@ -1,12 +1,17 @@
-.input // Wrapper div from simple_form
+@import "compass/typography/text/force-wrap"
+
+.form-inputs, .form-actions
+  margin-bottom: 10px
+
+.input
+  margin-bottom: 10px
+
   // General form styles
   input, select
     border-radius: 6px
-    height: 40px
+    border: none
     font-size: 14px
-
-  input, select
-    border: 1px solid $black
+    height: 40px
 
   select
     background-color: white
@@ -16,19 +21,22 @@
     padding: 4px 8px
     width: 100%
 
-.btn, a.button:visited
-  -webkit-appearance: none
+  input[type=checkbox]
+    height: auto
+
+.btn, a.btn:visited
+  +force-wrap
+  background-color: #0266c8
   border-radius: 16px
   border: 0
   color: white
   cursor: pointer
   font-size: 16px
-  font-weight: 500
-  padding: 12px 12px
-  text-transform: uppercase
+  max-width: 100%
+  padding: 12px
 
   &:hover
-    color: $black
+    background-color: #1188cc
     text-decoration: none
   &:active
     color: $black
