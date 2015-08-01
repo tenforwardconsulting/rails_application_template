@@ -77,10 +77,9 @@ insert_into_file 'config/application.rb', after: "config.active_record.raise_in_
     end
 TEXT
 end
-puts 'Copying over generator templates'
+puts 'Copying over generators and templates'
 directory 'lib/templates', force: true
-# Figure out scaffold_controller
-# Figure out scaffold
+directory 'lib/generators', force: true
 # Some sort of feature test generator? CRUD feature spec generator?
 
 ################################################################################
@@ -147,7 +146,7 @@ copy_file 'app/views/layouts/mailer.html.haml'
 puts 'Adding ApplicationMailer'
 create_file 'app/mailers/application_mailer.rb', <<-TEXT
 class ApplicationMailer < ActionMailer::Base
-  default from: 'info@#{@app_name}.com'
+  default from: 'Devise.mailer_sender'
   layout 'mailer'
 
   class SubjectPrefixer
@@ -160,27 +159,37 @@ end
 TEXT
 
 puts 'Adding email config to development.rb'
-gsub_file 'config/environments/development.rb', "\nend", <<-TEXT
+gsub_file 'config/environments/development.rb', "  # Don't care if the mailer can't send.\n  config.action_mailer.raise_delivery_errors = false\n", ''
+insert_into_file 'config/environments/development.rb', before: "\nend" do
+<<-TEXT
 
-  #Action mailer settings
+
+  # Action mailer settings
+  config.action_mailer.raise_delivery_errors = true
+  config.action_mailer.perform_deliveries = true
   config.action_mailer.default_url_options = { host: 'localhost', port: 3000 }
   config.action_mailer.delivery_method = :letter_opener
-end
 TEXT
+end
 
 puts 'Adding email config to production.rb'
-gsub_file 'config/environments/production.rb', "\nend", <<-TEXT
+insert_into_file 'config/environments/production.rb', before: "\nend" do
+<<-TEXT
 
-  #Action mailer settings
+
+  # Action mailer settings
   config.action_mailer.delivery_method = :sendmail
   config.action_mailer.perform_deliveries = true
-  #config.action_mailer.asset_host = 'https://example.com'
-  #config.action_mailer.default_url_options = { host: 'https://example.com' }
+  #config.action_mailer.asset_host = 'https://change-me.com'
+  #config.action_mailer.default_url_options = { host: 'https://change-me.com' }
   config.action_mailer.smtp_settings = {
     :enable_starttls_auto => false
   }
-end
 TEXT
+end
+
+append_to_file 'config/initializers/assets.rb', "Rails.application.config.assets.precompile += %w( email.css )"
+
 # TODO Style emails?
 
 ################################################################################
@@ -202,7 +211,7 @@ puts 'Creating devise mailer'
 copy_file 'app/mailers/devise_mailer.rb'
 
 puts 'Configuring devise'
-gsub_file 'config/initializers/devise.rb', "# config.mailer = 'Devise::Mailer'", "config.mailer = 'DeviseMailer'"
+gsub_file 'config/initializers/devise.rb', "# config.mailer = 'Devise::Mailer'", "config.mailer = 'DeviseMailer'\n  config.parent_mailer = 'ApplicationMailer'"
 gsub_file 'config/initializers/devise.rb', "config.password_length = 8..72", "config.password_length = 6..128"
 gsub_file 'config/initializers/devise.rb', "config.sign_out_via = :delete", "config.sign_out_via = [:delete, :get]"
 
