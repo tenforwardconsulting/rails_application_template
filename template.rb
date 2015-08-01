@@ -275,10 +275,23 @@ end
 ################################################################################
 # Capistrano
 ################################################################################
-run 'cap install'
+puts 'Capify!'
+run 'cap install STAGES=dev,production'
+directory 'config/deploy', force: true
+
+puts 'Configuring config/secrets.yml'
+copy_file 'config/secrets.yml', force: true
+
+puts 'Creating config/environments/dev.rb'
+run 'cp config/environments/production.rb config/environments/dev.rb'
+gsub_file 'config/environments/dev.rb', 'config.consider_all_requests_local       = false', 'config.consider_all_requests_local       = true'
+
+puts 'Configuring Capfile'
 append_to_file 'Capfile', "\nrequire 'jefferies_tube/capistrano'"
 gsub_file 'Capfile', "# require 'capistrano/rails/assets'\n# require 'capistrano/rails/migrations'", "require 'capistrano/rails'"
 gsub_file 'Capfile', "# require 'capistrano/passenger'", "require 'capistrano/passenger'"
+
+puts 'Configuring config/deploy.rb'
 gsub_file 'config/deploy.rb',
   "# ask :branch, `git rev-parse --abbrev-ref HEAD`.chomp",
   "set :branch, ENV['BRANCH'] || 'master'"
@@ -288,7 +301,9 @@ gsub_file 'config/deploy.rb',
 gsub_file 'config/deploy.rb',
   "# set :linked_dirs, fetch(:linked_dirs, []).push('log', 'tmp/pids', 'tmp/cache', 'tmp/sockets', 'vendor/bundle', 'public/system')",
   "set :linked_dirs, fetch(:linked_dirs, []).push('log', 'tmp/pids', 'tmp/cache', 'tmp/sockets', 'vendor/bundle', 'public/system')"
-
+gsub_file 'config/deploy.rb',
+  "# set :deploy_to, '/var/www/my_app_name'",
+  "set :deploy_to, '/u/apps/#{@app_name}'"
 text = <<-TEXT
 namespace :deploy do
 
