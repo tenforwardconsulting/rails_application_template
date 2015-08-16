@@ -1,4 +1,4 @@
-.<%= plural_table_name %>-show
+.<%= plural_table_name.dasherize %>-show
   = link_to 'Edit', edit_<%= singular_table_name %>_path(@<%= singular_table_name %>)
 
   <% for attribute in attributes -%>
