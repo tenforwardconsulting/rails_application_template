@@ -1,7 +1,9 @@
 # Ten Forward Rails application template
 This template made for Rails 4.2.3
 
-    rails new <project_name> --skip-test-unit --database=postgresql --template=path/to/template.rb
+This command assumes you are running `rails new` in the same directory that you cloned this repo.
+
+    rails new <project_name> --skip-test-unit --database=postgresql --template=./rails_application_template/template.rb
 
 ## Generator templates
 The files in lib/templates/rails are modified from their [source in the rails repo](https://github.com/rails/rails/tree/master/railties/lib/rails/generators/rails)
