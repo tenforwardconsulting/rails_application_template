@@ -7,14 +7,12 @@
   margin-bottom: 10px
 
   // General form styles
-  input, select
+  input, select, textarea
+    background-color: white
     border-radius: 4px
     border: none
     font-size: 14px
     height: 40px
-
-  select
-    background-color: white
 
   // String inputs
   select, input.string, input.numeric, input.password
@@ -23,6 +21,13 @@
 
   input[type=checkbox]
     height: auto
+
+  span.radio
+    label
+      display: block
+
+    input[type=radio]
+      height: auto
 
 .btn, a.btn:visited
   +force-wrap
