@@ -1,3 +1,6 @@
+# DEPRECATED.
+Use [sagacious\_succotash](https://github.com/tenforwardconsulting/sagacious_succotash)
+
 # Ten Forward Rails application template
 This template made for Rails 4.2.3
 
